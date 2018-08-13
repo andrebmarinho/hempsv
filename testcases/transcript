@@ -1,0 +1,8 @@
+# do hello_world/sim.do
+# vsim -novopt -t ps "+notimingchecks" hardware/work.test_bench 
+# Start time: 21:58:51 on Jul 03,2018
+# ** Error (suppressible): (vsim-19) Failed to access library 'hardware/work' at "hardware/work".
+# No such file or directory. (errno = ENOENT)
+# Error loading design
+# End time: 21:58:51 on Jul 03,2018, Elapsed time: 0:00:00
+# Errors: 1, Warnings: 0

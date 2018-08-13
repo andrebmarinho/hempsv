@@ -1,0 +1,32 @@
+##------------------------------------------------------------------------------------------------
+##
+##  DISTRIBUTED HEMPS -  8.0
+##
+##  Research group: GAPH-PUCRS    -    contact   fernando.moraes@pucrs.br
+##
+##  Distribution:  September 2013
+##
+##  Source name:  boot.S
+##
+##  Brief description: Initializes the stack pointer and jumps to main().
+##
+##------------------------------------------------------------------------------------------------
+
+        .text    
+        .set noat
+        .align  2
+        .globl  entry
+        .ent    entry
+entry:
+        .set noreorder
+		
+	li $sp,sp_addr
+	lui     $8,0x2000
+	ori     $8,$8,0x80
+	li      $9,1
+	sw      $9,0($8)
+$L1:
+        j $L1
+        nop
+        
+        .end entry

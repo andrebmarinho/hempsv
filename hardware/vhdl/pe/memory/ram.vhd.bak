@@ -1,0 +1,129 @@
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+use ieee.std_logic_textio.all;
+use std.textio.all;
+use work.standards.all;
+use work.hemps_pkg.all;
+
+entity ram is
+	generic 
+	(
+        ram_file            : string := "ram.txt"
+    );
+	port(clk            : in  std_logic :='0';
+        address_a       : in  std_logic_vector(31 downto 2) := (others=>'0');
+        enable_a        : in  std_logic :='0';
+        wbe_a           : in  std_logic_vector(3 downto 0) := (others=>'0');
+        data_write_a    : in  std_logic_vector(31 downto 0) := (others=>'0');
+        data_read_a     : out std_logic_vector(31 downto 0) := (others=>'0');
+        address_b       : in  std_logic_vector(31 downto 2) := (others=>'0');
+        enable_b        : in  std_logic :='0';
+        wbe_b           : in  std_logic_vector(3 downto 0) := (others=>'0');
+        data_write_b    : in  std_logic_vector(31 downto 0) := (others=>'0');
+        data_read_b     : out std_logic_vector(31 downto 0) := (others=>'0')
+	);
+end; --entity ram     
+
+architecture ram of ram is
+	
+	--constant MEMORY_SIZE_WORDS : integer := 50;
+	type mem_array is array(0 to MEMORY_SIZE_WORDS) of STD_LOGIC_VECTOR(31 downto 0);
+	
+	impure function init_mem (mem_file : in string) return mem_array is
+	
+			file file_ptr		: text open read_mode is mem_file;
+  			variable inline	: line;
+  			variable i        : integer := 0;
+  			variable mem 		: mem_array := (others => (others => '0'));
+			
+	begin
+
+		for i in 0 to MEMORY_SIZE_WORDS - 1 loop
+			exit when endfile(file_ptr);	
+			readline(file_ptr, inline);
+			hread(inline, mem(i));
+		end loop;
+
+		file_close(file_ptr);
+
+		return mem;
+
+    end init_mem;
+	
+	signal ram_data: mem_array := init_mem(ram_file);
+	
+begin
+
+	process(clk) begin
+		if rising_edge(clk) then 
+		
+				if to_integer(unsigned(address_a))<MEMORY_SIZE_WORDS then 
+
+					case wbe_a is
+						
+							when x"F" =>
+									ram_data(to_integer(unsigned(address_a))) <= data_write_a;
+							
+							when x"C" =>
+									ram_data(to_integer(unsigned(address_a)))(31 downto 16) <= data_write_a(31 downto 16);
+									
+							when x"3" =>
+									ram_data(to_integer(unsigned(address_a)))(15 downto 0) <= data_write_a(15 downto 0);		
+						
+							when x"8" =>
+									ram_data(to_integer(unsigned(address_a)))(31 downto 24) <= data_write_a(31 downto 24);
+							
+							when x"4" =>
+									ram_data(to_integer(unsigned(address_a)))(23 downto 16) <= data_write_a(23 downto 16);
+									
+							when x"2" =>
+									ram_data(to_integer(unsigned(address_a)))(15 downto 8) <= data_write_a(15 downto 8);
+									
+							when x"1" =>
+									ram_data(to_integer(unsigned(address_a)))(7 downto 0) <= data_write_a(7 downto 0);
+							
+							when others => 
+				
+					end case;
+                                
+					data_read_a <= ram_data(to_integer(unsigned(address_a)));
+				
+				end if;
+			
+				if to_integer(unsigned(address_b))<MEMORY_SIZE_WORDS then 
+				
+					case wbe_b is
+						
+							when x"F" =>
+									ram_data(to_integer(unsigned(address_b))) <= data_write_b;
+							
+							when x"C" =>
+									ram_data(to_integer(unsigned(address_b)))(31 downto 16) <= data_write_b(31 downto 16);
+									
+							when x"3" =>
+									ram_data(to_integer(unsigned(address_b)))(15 downto 0) <= data_write_b(15 downto 0);		
+						
+							when x"8" =>
+									ram_data(to_integer(unsigned(address_b)))(31 downto 24) <= data_write_b(31 downto 24);
+							
+							when x"4" =>
+									ram_data(to_integer(unsigned(address_b)))(23 downto 16) <= data_write_b(23 downto 16);
+									
+							when x"2" =>
+									ram_data(to_integer(unsigned(address_b)))(15 downto 8) <= data_write_b(15 downto 8);
+									
+							when x"1" =>
+									ram_data(to_integer(unsigned(address_b)))(7 downto 0) <= data_write_b(7 downto 0);
+							
+							when others =>
+									
+					end case;
+			
+					data_read_b <= ram_data(to_integer(unsigned(address_b)));
+				
+				end if;
+			end if;
+	end process;
+	
+end;

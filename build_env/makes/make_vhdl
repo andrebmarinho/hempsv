@@ -1,0 +1,83 @@
+COR  =\033[0;32m
+NC   =\033[0m # No Color
+
+LIB=work
+
+COMP_VHDL 		=vcom -work $(LIB)
+COMP_SV 		=vlog -work $(LIB)
+
+#VHDL files
+HEMPS_PKG		=hemps_pkg
+STAND			=standards
+TOP 			=hemps test_bench
+PE	 			=pe
+DMNI 			=dmni
+MEMORY 			=ram	
+PROCESSOR_SV	=clarvi clarvi_avalon memory_debug
+PROCESSOR_VHDL	=clarvi_wrapper UartFile
+#PROCESSOR 		=mlite_pack UartFile alu bus_mux control mem_ctrl mult pc_next pipeline reg_bank shifter mlite_cpu
+ROUTER	 		=Hermes_buffer Hermes_crossbar Hermes_switchcontrol RouterCC
+
+HEMPS_PKG_SRC		= $(addprefix ../include/, 					$(HEMPS_PKG:=.vhd) 	)
+STAND_SRC	    	= $(addprefix vhdl/, 						$(STAND:=.vhd) 		)
+TOP_SRC	    		= $(addprefix vhdl/, 						$(TOP:=.vhd) 		)
+PE_SRC				= $(addprefix vhdl/pe/, 					$(PE:=.vhd)   		)
+DMNI_SRC			= $(addprefix vhdl/pe/dmni/, 				$(DMNI:=.vhd) 		)
+MEMORY_SRC			= $(addprefix vhdl/pe/memory/,				$(MEMORY:=.vhd) 	) 
+#PROCESSOR_SRC		= $(addprefix vhdl/pe/processor/plasma/, 	$(PROCESSOR:=.vhd) 	)
+PROCESSOR_SRC_VHDL	= $(addprefix vhdl/pe/processor/clarvi/, 	$(PROCESSOR_VHDL:=.vhd) 	)
+PROCESSOR_SRC_SV	= $(addprefix vhdl/pe/processor/clarvi/, 	$(PROCESSOR_SV:=.sv) 	)
+ROUTER_SRC			= $(addprefix vhdl/pe/router/, 				$(ROUTER:=.vhd) 	)
+
+default: lib $(HEMPS_PKG) $(STAND) $(ROUTER) $(PROCESSOR_SV) $(PROCESSOR_VHDL) $(DMNI) $(MEMORY) $(PE) $(TOP)
+
+lib:
+	@vlib $(LIB)
+	@vmap $(LIB) $(LIB)
+
+$(HEMPS_PKG): $(HEMPS_PKG_SRC)
+	@printf "${COR}Compiling VHDL source: %s ...${NC}\n" "$(dir $<)$@.vhd"
+	$(COMP_VHDL) $(dir $<)$@.vhd
+
+$(STAND): $(STAND_SRC)
+	@printf "${COR}Compiling VHDL source: %s ...${NC}\n" "$(dir $<)$@.vhd"
+	$(COMP_VHDL) $(dir $<)$@.vhd
+
+$(TOP): $(TOP_SRC)
+	@printf "${COR}Compiling VHDL source: %s ...${NC}\n" "$(dir $<)$@.vhd"
+	$(COMP_VHDL) $(dir $<)$@.vhd
+
+$(PE): $(PE_SRC)
+	@printf "${COR}Compiling VHDL source: %s ...${NC}\n" "$(dir $<)$@.vhd"
+	$(COMP_VHDL) $(dir $<)$@.vhd
+
+$(DMNI): $(DMNI_SRC)
+	@printf "${COR}Compiling VHDL source: %s ...${NC}\n" "$(dir $<)$@.vhd"
+	$(COMP_VHDL) $(dir $<)$@.vhd
+
+$(MEMORY): $(MEMORY_SRC)
+	@printf "${COR}Compiling VHDL source: %s ...${NC}\n" "$(dir $<)$@.vhd"
+	$(COMP_VHDL) $(dir $<)$@.vhd
+
+$(PROCESSOR_SV): $(PROCESSOR_SRC_SV)
+	@printf "${COR}Compiling SV source: %s ...${NC}\n" "$(dir $<)$@.sv"
+	$(COMP_SV) $(dir $<)$@.sv +define+TRACE
+
+$(PROCESSOR_VHDL): $(PROCESSOR_SRC_VHDL)
+	@printf "${COR}Compiling VHDL source: %s ...${NC}\n" "$(dir $<)$@.vhd"
+	$(COMP_VHDL) $(dir $<)$@.vhd
+
+$(ROUTER): $(ROUTER_SRC)
+	@printf "${COR}Compiling VHDL source: %s ...${NC}\n" "$(dir $<)$@.vhd"
+	$(COMP_VHDL) $(dir $<)$@.vhd
+
+clean:
+	@printf "Cleaning up\n"
+	@rm -f *~
+	@rm -f *.o
+	@rm -f *.exe
+	@rm -f HeMPS
+	@rm -f repository*
+	@rm -f ../modelsim.ini
+	@rm -rf ../work
+	@rm -rf ../transcript

@@ -1,0 +1,45 @@
+GREEN  =\033[0;32m
+NC   =\033[0m # No Color
+
+INCLUDE           = ../../software/include
+
+ASFLAGS		= -march=rv32im -mabi=ilp32 
+CFLAGS      = -O0 -Wall -c -s -std=c99 -march=rv32im  -mabi=ilp32
+GCC_RISCV	= riscv32-unknown-elf-gcc $(CFLAGS)
+AS_RISCV 	= riscv32-unknown-elf-as  $(ASFLAGS)
+LD_RISCV	= riscv32-unknown-elf-ld
+DUMP_RISCV	= riscv32-unknown-elf-objdump
+COPY_RISCV 	= riscv32-unknown-elf-objcopy -O binary
+#COPY_RISCV 	= riscv32-unknown-elf-objcopy -I elf32-big -O binary
+
+BOOT_TASK 	= boot_task
+BOOT_TASK_SRC	= ../../software/boot_task/boot_task.s
+
+TASK_SRC = $(wildcard *.c)
+TASK_OBJ = $(TASK_SRC:.c=.o)
+
+default: $(BOOT_TASK).o $(TASK_OBJ) 
+
+boot_task.o: $(BOOT_TASK_SRC)
+	@printf "${GREEN}Compiling boot task: %s ...${NC}\n" "$*.c"
+	$(AS_RISCV) --defsym sp_addr=$(PAGE_SP_INIT) -o $@ $^
+
+#[$*] - only the filename - #https://www.gnu.org/software/make/manual/make.html#Automatic-Variables
+$(TASK_OBJ): $(TASK_SRC) 
+	@printf "${GREEN}Compiling task: %s ...${NC}\n" "$*.c"
+	$(GCC_RISCV) $*.c -o $*.o --include id_tasks.h -I $(INCLUDE)
+	$(LD_RISCV) -Ttext 0 -eentry --no-relax -Map $*.map -s -N -o $*.bin $(BOOT_TASK).o $*.o
+	$(LD_RISCV) -Ttext 0 -eentry --no-relax -Map $*_debug.map -o $*_debug.bin $(BOOT_TASK).o $*.o
+	$(DUMP_RISCV) -S $*_debug.bin > $*.lst
+	$(COPY_RISCV) $*.bin $*.dump
+	hexdump -v -e '"%08x\n"' $*.dump > $*.txt
+#hexdump -v -e '1/1 "%02x" 1/1 "%02x" 1/1 "%02x" 1/1 "%02x" "\n"' $*.dump > $*.txt
+
+clean:
+	@printf "Cleaning up\n"
+	@rm -rf *.o
+	@rm -rf *.bin
+	@rm -rf *.map
+	@rm -rf *.lst
+	@rm -rf *.txt
+	@rm -rf *.dump
